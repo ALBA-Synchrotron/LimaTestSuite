@@ -17,6 +17,7 @@ setup(
     description="framework for testing lima plugin detectors",
     license="GPL3",
     url="http://www.cells.es",
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'limatest = LimaTestSuite.__main__:run',
