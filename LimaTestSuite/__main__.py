@@ -1,5 +1,6 @@
 import unittest
 import os
+import logging
 from LimaConfigHelper import LimaTestParser
 from LimaCCDTestCase import LimaCCDAquisitionTest
 from LimaTestSuite import logger, _str_date_now
@@ -34,9 +35,9 @@ def run_test(filename):
     for fail in result.failures:
         logger.info(fail[-1].split("\n")[-2])
 
-if __name__ == "__main__":
+
+def run():
     import argparse
-    import logging
     description = 'Basic unittesting for Lima detector'
     epilog = 'ctbeamlines@cells.es'
 
@@ -58,3 +59,6 @@ if __name__ == "__main__":
     filename = os.path.join(path, filename)
     logging.basicConfig(filename=filename)
     run_test(args.config_file)
+
+if __name__ == "__main__":
+    run()
