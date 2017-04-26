@@ -261,7 +261,7 @@ class LimaDetector(object):
                 self.stop()
                 time.sleep(3)
                 self.logger.debug("%s" % repr(self.ct.getStatus()))
-                # break
+                break
 
             # Check acq finished with status Ready
             if Core.AcqReady == self.ct.getStatus().AcquisitionStatus and\

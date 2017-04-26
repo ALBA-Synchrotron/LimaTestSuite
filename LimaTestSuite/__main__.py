@@ -19,11 +19,11 @@ def run_test(filename):
         if test.type.lower() == "acquisition":
             case = LimaCCDAquisitionTest(test)
             test_suite.addTest(case)
-            logger.info("Adding acquisition test --> %s" % test.name)
+            logger.info("Adding test --> %s [Acquisition]" % test.name)
         elif test.type.lower() == "abort":
             case = LimaCCDAquisitionTest(test, True)
             test_suite.addTest(case)
-            logger.info("Adding abort test --> %s" % test.name)
+            logger.info("Adding test --> %s [Abort]" % test.name)
         else:
             logger.error("Type %s in not a valid test type." % test.type)
     logger.info('Starting %s test(s)' % len(tests))
