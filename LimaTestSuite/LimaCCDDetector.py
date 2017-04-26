@@ -6,23 +6,26 @@ from LimaTestSuite import get_dict, ADXVSocket
 import logging
 
 
-class BaseDetector(object):
+class SpecificDetector(object):
     def __init__(self):
 
-        self._AcqDefaults = {'acqExpoTime': 1,
-                              'acqNbFrames': 10,
-                              'acqMode': 'Single',
-                              'triggerMode': 'Internal',
-                              'lattencyTime': 0
-                              }
+        # self._AcqDefaults = {'acqExpoTime': 1,
+        #                       'acqNbFrames': 10,
+        #                       'acqMode': 'Single',
+        #                       'triggerMode': 'Internal',
+        #                       'lattencyTime': 0
+        #                       }
+        #
+        # self._SavingDefaults = {'directory': './',
+        #                          'prefix': 'img_',
+        #                          'suffix': '.cbf',
+        #                          'fileFormat': 'CBF',
+        #                          'savingMode': 'AUTO_FRAME',
+        #                          'overwritePolicy': 'OVERWRITE'
+        #                          }
 
-        self._SavingDefaults = {'directory': './',
-                                 'prefix': 'img_',
-                                 'suffix': '.cbf',
-                                 'fileFormat': 'CBF',
-                                 'savingMode': 'AUTO_FRAME',
-                                 'overwritePolicy': 'OVERWRITE'
-                                 }
+        self._AcqDefaults = {}
+        self._SavingDefaults = {}
 
         # Basic Specific detector objects
         self.cam = None
@@ -51,7 +54,9 @@ class BaseDetector(object):
 
 class LimaDetector(object):
 
-    def __init__(self, det_name, host=None, port=None, adxv_host=None):
+    def __init__(self, config):
+        # The config is a LimaTestConfiguration object
+        #
         # A dictionary is defined for each Lima Core constants that has
         # a discrete set of possible values. The naming convention is:
         # _<ConstantName>
@@ -91,17 +96,24 @@ class LimaDetector(object):
         self.end_time = 0.0
 
         self.logger = logging.getLogger('LimaTestSuite')
-        self.logger.info("Detector created")
 
         # OPTIONAL: External visualization software
-        self.adxv_host = adxv_host
-        if self.adxv_host:
-            self.adxv_socket = ADXVSocket(self.adxv_host)
-            self.logger.debug("ADXV socket communication is ON")
-        # Init the detector specific plugin
-        self.init(det_name, host, port)
+        # self.adxv_host = adxv_host
+        # if self.adxv_host:
+        #     self.adxv_socket = ADXVSocket(self.adxv_host)
+        #     self.logger.debug("ADXV socket communication is ON")
+        # # Init the detector specific plugin
+        det_type = config.det_type
+        host = config.host
+        port = config.port
 
-    def init(self, name, host, port):
+        self.init(det_type, host, port)
+
+        self._AcqConfig = config.acq_params
+        self._SavingConfig = config.saving_params
+        #self.set_default_parameters()
+
+    def init(self, det_type, host, port):
         # We try to load a module containing the detector object
         # The class name must be follow the pattern <name>LimaDetector
         # The path relative to this file must be <name>
@@ -109,17 +121,17 @@ class LimaDetector(object):
         try:
             # Export module to python path:
             p = os.path.dirname(__file__)
-            mpath = os.path.abspath(os.path.join(p, name))
+            mpath = os.path.abspath(os.path.join(p, det_type))
             sys.path.insert(0, mpath)
             msg = "Importing module: %s" % mpath
             self.logger.debug(msg)
             # Get class from module
-            module = __import__(name)
-            class_name = '{0}'.format(name)
+            module = __import__(det_type)
+            class_name = '{0}'.format(det_type)
             # Create an instance of the detector class
             det = getattr(module, class_name)(host, port)
         except Exception as e:
-            msg = "ERROR: Cannot find plugin/method %s, %s " % (name, str(e))
+            msg = "ERROR: Cannot find plugin %s, %s " % (det_type, str(e))
             raise ImportError(msg)
         try:
             # Specific API from LimaDetector class
@@ -135,9 +147,9 @@ class LimaDetector(object):
         # Get detector default configurations provided by the specified Detector
         # class and apply it by default. If no defaults applied, the correct
         # acquisition cannot be guaranteed.
-        self._AcqConfig = det.get_acq_defaults()
-        self._SavingConfig = det.get_saving_defaults()
-        self.set_default_parameters()
+        #self._AcqConfig = det.get_acq_defaults()
+        #self._SavingConfig = det.get_saving_defaults()
+        #self.set_default_parameters()
 
     def _update_config_from_dict(self, config, params):
         """
@@ -181,9 +193,9 @@ class LimaDetector(object):
         self._update_config_from_dict(config, p)
         self.ct_save.setParameters(p)
 
-    def set_default_parameters(self):
-        self.update_saving_params(self._SavingConfig)
-        self.update_acq_params(self._AcqConfig)
+    # def set_default_parameters(self):
+    #     self.update_saving_params(self._SavingConfig)
+    #     self.update_acq_params(self._AcqConfig)
 
     def prepare_acq(self):
         self.ct.prepareAcq()
@@ -213,52 +225,94 @@ class LimaDetector(object):
 
     def print_acq_params(self):
         for k,v in self._AcqConfig.iteritems():
-            self.logger.info("Aquisition param: %s = %s" % (k, v))
+            self.logger.debug("Aquisition param: %s = %s" % (k, v))
 
     def print_saving_params(self):
         for k,v in self._AcqConfig.iteritems():
-            self.logger.info("Saving param: %s = %s" % (k, v))
+            self.logger.debug("Saving param: %s = %s" % (k, v))
 
-    def start(self):
+    def start(self, abort=False):
         try:
             self.ct.startAcq()
-            self.start_time = time.time()
+#            self.start_time = time.time()
         except Exception, e:
-            self.logger.error('Error starting acquisition:\n%s', e)
+            raise RuntimeError('Error starting acquisition:\n%s', e)
 
-        self.logger.info('Starting acquisition')
-        last_img_sent = -1
-        last_img = self.ct.getStatus().ImageCounters.LastImageSaved
-        period = self.ct_acq.getAcqExpoTime() / 4.0
+        # if not Core.AcqRunning == self.ct.getStatus().AcquisitionStatus:
+        #     raise RuntimeError("Acquisition cannot not start.")
 
-        while last_img < (self.ct_acq.getAcqNbFrames() - 1):
-            time.sleep(period)
-            last_img = self.ct.getStatus().ImageCounters.LastImageSaved
-            if self.adxv_host and last_img_sent < last_img:
-                last_img_sent = last_img
-                fn = self.get_last_filename()
-                self.adxv_socket.send_image_name(fn)
-                self.logger.debug('sending image %s' % fn)
-            else:
+
+        self.logger.debug('Starting acquisition')
+        # last_img_sent = -1
+        # last_img = self.ct.getStatus().ImageCounters.LastImageSaved
+        period = self.ct_acq.getAcqExpoTime() + 1
+        img_idx = self.ct_acq.getAcqNbFrames() - 1
+
+        counter = 0
+        last_saved = 0
+
+        while True:
+            prev_acq = self.ct.getStatus().ImageCounters.LastImageAcquired
+            prev_saved = self.ct.getStatus().ImageCounters.LastImageSaved
+            if prev_saved == img_idx:
+                break
+
+            if abort:
+                self.stop()
+                time.sleep(3)
                 self.logger.debug("%s" % repr(self.ct.getStatus()))
+                # break
+
+            # Check acq finished with status Ready
+            if Core.AcqReady == self.ct.getStatus().AcquisitionStatus and\
+                prev_saved != img_idx:
+                raise RuntimeError(
+                    "Acquisition finished with state=READY but images were not"
+                    " generated properly.")
+
+            time.sleep(period)
+            last_acq = self.ct.getStatus().ImageCounters.LastImageAcquired
+            if not (last_acq - prev_acq) and last_acq != img_idx:
+                raise RuntimeError("Acquisition time has been exceeded.")
+            if counter > 5:
+                if last_saved - prev_saved < 1:
+                    raise RuntimeError("Images cannot be saved.")
+                counter = 0
+                last_saved = self.ct.getStatus().ImageCounters.LastImageSaved
+            else:
+                counter += 1
+
+            self.logger.debug("%s" % repr(self.ct.getStatus()))
+
+
+            # if self.adxv_host and last_img_sent < last_img:
+            #     last_img_sent = last_img
+            #     fn = self.get_last_filename()
+            #     self.adxv_socket.send_image_name(fn)
+            #     self.logger.debug('sending image %s' % fn)
+            # else:
+            #     self.logger.debug("%s" % repr(self.ct.getStatus()))
+
+        if not Core.AcqReady == self.ct.getStatus().AcquisitionStatus:
+            raise RuntimeError("Acquisition did not finished in READY state.")
 
     def stop(self):
         try:
             self.ct.stopAcq()
         except Exception, e:
-            self.logger.error('Error stopping acquisition:\n%s', e)
+            raise RuntimeError('Error stopping acquisition:\n%s', e)
 
     def status(self):
         try:
             return self.ct.Status()
         except Exception, e:
-            self.logger.error('Error requesting detector status:\n%s', e)
+            raise RuntimeError('Error requesting detector status:\n%s', e)
 
     def delete(self):
         try:
             self.cam.exit()
         except Exception, e:
-            self.logger.error('Error deleting detector object:\n%s', e)
+            raise RuntimeError('Error deleting detector object:\n%s', e)
 
     @staticmethod
     def set_debug(debug=True):
@@ -269,12 +323,12 @@ class LimaDetector(object):
             Core.DebParams.setTypeFlags(0x00)
             Core.DebParams.setModuleFlags(0x0000)
 
-    def get_last_filename(self):
-        saving_parameters = self.ct_save().getParameters()
-        last_image_saved = self.ct.getStatus().ImageCounters.LastImageSaved
-        directory = saving_parameters.directory
-        prefix = saving_parameters.prefix
-        suffix = saving_parameters.suffix
-        number = str(last_image_saved).zfill(4)
-        filename = prefix + number + suffix
-        return os.path.join(directory, filename)
+    # def get_last_filename(self):
+    #     saving_parameters = self.ct_save().getParameters()
+    #     last_image_saved = self.ct.getStatus().ImageCounters.LastImageSaved
+    #     directory = saving_parameters.directory
+    #     prefix = saving_parameters.prefix
+    #     suffix = saving_parameters.suffix
+    #     number = str(last_image_saved).zfill(4)
+    #     filename = prefix + number + suffix
+    #     return os.path.join(directory, filename)

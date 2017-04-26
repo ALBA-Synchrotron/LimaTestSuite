@@ -2,11 +2,11 @@ import socket
 import re
 import datetime
 import logging
-
+import os
 
 # create logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # create console handler and set level to debug
 ch = logging.StreamHandler()
@@ -20,6 +20,16 @@ ch.setFormatter(formatter)
 
 # add ch to logger
 logger.addHandler(ch)
+
+
+
+def debug(fn):
+    def _decorated(*arg,**kwargs):
+        logger.log(logging.DEBUG, "ENTERING '%s'(%r,%r)", fn.func_name, arg, kwargs)
+        ret=fn(*arg,**kwargs)
+        logger.log(logging.DEBUG, "EXITING '%s'(%r,%r) got return value: %r", fn.func_name, arg, kwargs, ret)
+        return ret
+    return _decorated
 
 
 def _get_dict_key(d, value):
@@ -43,6 +53,16 @@ def _str_date_now():
     nowstr = now.strftime("%Y%m%d_%H%M")
     return nowstr
 
+
+def create_test_folder(test_name):
+    #cwd = os.getcwd()
+    cwd = '/tmp/LimaTestSuite'
+    folder = "{0}_{1}".format(test_name, _str_date_now())
+    #folder = "{0}".format(test_name)
+    test_path = os.path.join(cwd, folder)
+    if not os.path.exists(test_path):
+       os.makedirs(test_path)
+    return test_path
 
 # def dict2param(name):
 #     """

@@ -1,15 +1,7 @@
 import os
 import ConfigParser
 import logging
-
-
-class LimaDetectorConfiguration(object):
-
-    def __init__(self, name , type, host=None, port=None):
-        self.name = name
-        self.type = type
-        self.host = host
-        self.port = port
+from LimaTestSuite import create_test_folder, debug
 
 
 class LimaTestConfiguration(object):
@@ -34,50 +26,68 @@ class LimaTestConfiguration(object):
                    'nbframes': int
                    }
 
-    def __init__(self, t_name, t_type, d_name, acq, saving):
-        self.name = t_name
-        self.detector = d_name
-        self.type = t_type
+    def __init__(self, name, type, det_type, host, port, acq, saving):
+        self.name = name
+        self.type = type
+        self.det_type = det_type
+        self.host = host
+        self.port = port
         self.acq_params = {}
         self.saving_params = {}
+        # self.adxv_host = adxv_host
+        # self.adxv_port = adxv_port
 
-        # Default configurations
-        acq_keys = self.ACQ_KEYS.keys()
-        self._acq_defaults = dict.fromkeys(acq_keys)
-        saving_keys = self.SAVING_KEYS.keys()
-        self._saving_defaults = dict.fromkeys(saving_keys)
+        # # Default configurations
+        # acq_keys = self.ACQ_KEYS.keys()
+        # self._acq_defaults = dict.fromkeys(acq_keys)
+        # saving_keys = self.SAVING_KEYS.keys()
+        # self._saving_defaults = dict.fromkeys(saving_keys)
+
+        # # Update detector configuration defaults
+        # self._acq_defaults.update(acq)
+        # self._saving_defaults.update(saving)
 
         # Update detector configuration defaults
-        self._acq_defaults.update(acq)
-        self._saving_defaults.update(saving)
+        self.acq_params.update(acq)
+        self.saving_params.update(saving)
 
-    def get_acq_params(self):
-        return self._acq_defaults.copy()
+    def get_copy(self, name, type, acq, saving):
+        acq_params = self.acq_params.copy()
+        saving_params = self.saving_params.copy()
+        acq_params.update(acq)
+        saving_params.update(saving)
+        return LimaTestConfiguration(name, type, self.det_type, self.host,
+                                     self.port, acq_params, saving_params)
 
-    def get_saving_params(self):
-        return self._saving_defaults.copy()
+    # @property
+    # def acq_defaults(self):
+    #     return self._acq_defaults.copy()
+    #
+    # @property
+    # def saving_defaults(self):
+    #     return self._saving_defaults.copy()
 
-    def get_detector_name(self):
-        return self.detector
+    # def get_detector_name(self):
+    #     return self.det_type
+    #
+    # def get_test_name(self):
+    #     return self.name
 
-    def get_test_name(self):
-        return self.name
-
-    def __repr__(self):
-        msg = "{0}\n".format(50*"#")
-        msg += "Test name: {0} | ".format(self.name)
-        msg += "Test type: {0}\n".format(self.type)
-        msg += "Detector name: {0}\n".format(self.detector)
-        msg += "{0}\n".format(50 * "-")
-        msg += "Acquisition parameters:\n"
-        for k, v in self._acq_defaults.iteritems():
-            msg += "  {0} = {1}\n".format(k, v)
-        msg += "{0}\n".format(50 * "-")
-        msg += "Saving parameters:\n"
-        for k, v in self._saving_defaults.iteritems():
-            msg += "  {0} = {1}\n".format(k, v)
-        msg += "{0}\n".format(50 * "#")
-        return msg
+    # def __repr__(self):
+    #     msg = "{0}\n".format(50*"#")
+    #     msg += "Test name: {0} | ".format(self.name)
+    #     msg += "Test type: {0}\n".format(self.type)
+    #     msg += "Detector type: {0}\n".format(self.det_type)
+    #     msg += "{0}\n".format(50 * "-")
+    #     msg += "Acquisition parameters:\n"
+    #     for k, v in self._acq_defaults.iteritems():
+    #         msg += "  {0} = {1}\n".format(k, v)
+    #     msg += "{0}\n".format(50 * "-")
+    #     msg += "Saving parameters:\n"
+    #     for k, v in self._saving_defaults.iteritems():
+    #         msg += "  {0} = {1}\n".format(k, v)
+    #     msg += "{0}\n".format(50 * "#")
+    #     return msg
 
 
 class LimaTestParser(object):
@@ -88,7 +98,7 @@ class LimaTestParser(object):
     :param filename: name of the configuration file
     """
     def __init__(self, filename):
-        self.logger = logging.getLogger('LimTestSuite')
+        self.logger = logging.getLogger('LimaTestSuite')
         self.config = ConfigParser.RawConfigParser()
         self.config.optionxform = str  # preserve Capitals
         self.filename = filename
@@ -108,11 +118,19 @@ class LimaTestParser(object):
         self.load_default_test()
         self.load_tests()
 
+    @debug
     def load_default_test(self):
         """
         Load info about detector and default test configuration.
         """
-        det_name = self.config.get(self.default_sections['Detector'], 'name')
+        self.logger.debug("Loading default configuration")
+        det_type = self.config.get(self.default_sections['Detector'], 'type')
+        det_type += 'Detector'
+        host = eval(self.config.get(self.default_sections['Detector'], 'host'))
+        port = eval(self.config.get(self.default_sections['Detector'], 'port'))
+
+        # adxv_host = self.config.get(self.default_sections['ADXV'], 'host')
+        # adxv_port = self.config.get(self.default_sections['ADXV'], 'port')
 
         acq = {}
         saving = {}
@@ -125,6 +143,8 @@ class LimaTestParser(object):
                 acq.update({param: value})
 
             for param, t in LimaTestConfiguration.SAVING_KEYS.iteritems():
+                if param.lower() == 'directory':
+                    continue
                 value = t(self.config.get(saving_section, param))
                 saving.update({param: value})
 
@@ -138,10 +158,10 @@ class LimaTestParser(object):
            any(v == None for v in saving.values()):
             self.logger.warning("The default values set is not complete")
             return None
-        else:
-            self.logger.debug("Default configuration loaded successfully")
 
-        self.default_test = LimaTestConfiguration('default', 'd_type', det_name, acq, saving)
+        self.default_test = LimaTestConfiguration('', None, det_type, host,
+                                                  port, acq, saving)
+        self.logger.debug("Default configuration loaded successfully")
 
     def _get_tests_list(self):
         # Get the test names from cfg file ( i.e. section names)
@@ -158,7 +178,7 @@ class LimaTestParser(object):
             t = self.load_test(test)
             self.tests.append(t)
 
-    def load_test(self, t_name):
+    def load_test(self, name):
         """
         Load a test from configuration file.
         :param config:
@@ -171,31 +191,37 @@ class LimaTestParser(object):
         acq_keys = LimaTestConfiguration.ACQ_KEYS.keys()
         saving_keys = LimaTestConfiguration.SAVING_KEYS.keys()
 
-        t_dict = dict(self.config.items(t_name))
+        t_dict = dict(self.config.items(name))
+        self.logger.debug('Loading test %s values...' % name)
         for key, value in t_dict.iteritems():
+            self.logger.debug('Updating value: %s = %s' % (key, value))
             if key in acq_keys:
                 _value = LimaTestConfiguration.ACQ_KEYS[key](value)
                 acq.update({key: _value})
             elif key in saving_keys:
-                _value = LimaTestConfiguration.SAVING_KEYS[key](value)
-                saving.update({key: _value})
+                if key.lower() == 'directory':
+                    self.logger.debug('directory is assigned automatically')
+                else:
+                    _value = LimaTestConfiguration.SAVING_KEYS[key](value)
+                    saving.update({key: _value})
             elif key == "type":
                 t_type = value
             else:
-                msg = 'Non valid test key <%s> found in test %s' % (key, t_name)
+                msg = 'Non valid test key <%s> found in test %s' % (key, name)
                 raise Exception(msg)
 
+        path = create_test_folder(name)
+        saving.update({'directory': path})
+        self.logger.debug("Test directory is %s" % path)
+
         if self.default_test and t_type:
-            acq_params = self.default_test.get_acq_params()
-            saving_params = self.default_test.get_saving_params()
-            acq_params.update(acq)
-            saving_params.update(saving)
-            d_name = self.default_test.get_detector_name()
-            test = LimaTestConfiguration(t_name, t_type, d_name, acq_params, saving_params)
+            test = self.default_test.get_copy(name, t_type, acq, saving)
             return test
 
     def get_tests(self):
         return self.tests
+
+
 
 if __name__ == "__main__":
     import argparse
