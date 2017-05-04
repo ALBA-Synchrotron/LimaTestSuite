@@ -15,6 +15,7 @@ def run_test(filename):
 
     # Create test suite
     test_suite = unittest.TestSuite()
+    ntests = 0
     for test in tests:
         if test.type.lower() in TEST_TYPES:
             if test.type.lower() == TEST_TYPES[0]: #Acquisition
@@ -25,10 +26,11 @@ def run_test(filename):
                     test.name, test.repeat, test.type))
             for i in range(test.repeat):
                 test_suite.addTest(case)
+                ntests += 1
         else:
             logger.error("Type %s is not a valid test type." % test.type)
 
-    logger.info('Starting %s test(s)' % len(tests))
+    logger.info('Starting %s test(s)' % ntests)
     result = unittest.TextTestRunner(verbosity=1).run(test_suite)
     errors = len(result.errors)
     failures = len(result.failures)
