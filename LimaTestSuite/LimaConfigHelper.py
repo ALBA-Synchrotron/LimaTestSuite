@@ -26,9 +26,10 @@ class LimaTestConfiguration(object):
                    'nbframes': int
                    }
 
-    def __init__(self, name, type, det_type, host, port, acq, saving):
+    def __init__(self, name, type, repeat, det_type, host, port, acq, saving):
         self.name = name
         self.type = type
+        self.repeat = repeat
         self.det_type = det_type
         self.host = host
         self.port = port
@@ -51,12 +52,13 @@ class LimaTestConfiguration(object):
         self.acq_params.update(acq)
         self.saving_params.update(saving)
 
-    def get_copy(self, name, type, acq, saving):
+    def get_copy(self, name, type, repeat, acq, saving):
+        '''Copy default configuration overwriting specific config'''
         acq_params = self.acq_params.copy()
         saving_params = self.saving_params.copy()
         acq_params.update(acq)
         saving_params.update(saving)
-        return LimaTestConfiguration(name, type, self.det_type, self.host,
+        return LimaTestConfiguration(name, type, repeat, self.det_type, self.host,
                                      self.port, acq_params, saving_params)
 
     # @property
@@ -159,9 +161,13 @@ class LimaTestParser(object):
             self.logger.warning("The default values set is not complete")
             return None
 
-        self.default_test = LimaTestConfiguration('', None, det_type, host,
+        self.default_test = LimaTestConfiguration('', None, 1, det_type, host,
                                                   port, acq, saving)
-        self.logger.debug("Default configuration loaded successfully")
+        if self.default_test is not None:
+            self.logger.debug("Default configuration loaded successfully")
+        else:
+            self.logger.error("Error loading default configuration")
+
 
     def _get_tests_list(self):
         # Get the test names from cfg file ( i.e. section names)
@@ -187,6 +193,7 @@ class LimaTestParser(object):
         acq = {}
         saving = {}
         t_type = None
+        t_repeat = 1
 
         acq_keys = LimaTestConfiguration.ACQ_KEYS.keys()
         saving_keys = LimaTestConfiguration.SAVING_KEYS.keys()
@@ -206,6 +213,8 @@ class LimaTestParser(object):
                     saving.update({key: _value})
             elif key == "type":
                 t_type = value
+            elif key == "repeat":
+                t_repeat = int(value)
             else:
                 msg = 'Non valid test key <%s> found in test %s' % (key, name)
                 raise Exception(msg)
@@ -215,8 +224,14 @@ class LimaTestParser(object):
         self.logger.debug("Test directory is %s" % path)
 
         if self.default_test and t_type:
-            test = self.default_test.get_copy(name, t_type, acq, saving)
-            return test
+            test = self.default_test.get_copy(name, t_type, t_repeat, acq, saving)
+        else:
+            msg = 'Non valid test found, please review config file [%s, %s]' % \
+                (str(self.default_test), str(t_type))
+            raise Exception(msg)
+
+        return test
+
 
     def get_tests(self):
         return self.tests

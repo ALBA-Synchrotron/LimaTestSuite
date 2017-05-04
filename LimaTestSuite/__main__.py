@@ -5,7 +5,7 @@ from LimaConfigHelper import LimaTestParser
 from LimaCCDTestCase import LimaCCDAquisitionTest
 from LimaTestSuite import logger, _str_date_now
 
-
+TEST_TYPES = ["acquisition","abort"]
 
 def run_test(filename):
 
@@ -16,16 +16,18 @@ def run_test(filename):
     # Create test suite
     test_suite = unittest.TestSuite()
     for test in tests:
-        if test.type.lower() == "acquisition":
-            case = LimaCCDAquisitionTest(test)
-            test_suite.addTest(case)
-            logger.info("Adding test --> %s [Acquisition]" % test.name)
-        elif test.type.lower() == "abort":
-            case = LimaCCDAquisitionTest(test, True)
-            test_suite.addTest(case)
-            logger.info("Adding test --> %s [Abort]" % test.name)
+        if test.type.lower() in TEST_TYPES:
+            if test.type.lower() == TEST_TYPES[0]: #Acquisition
+                case = LimaCCDAquisitionTest(test)
+            elif test.type.lower() == TEST_TYPES[1]: #Abort
+                case = LimaCCDAquisitionTest(test, True)
+            logger.info("Adding test --> %s [r%d] [%s]" % (
+                    test.name, test.repeat, test.type))
+            for i in range(test.repeat):
+                test_suite.addTest(case)
         else:
-            logger.error("Type %s in not a valid test type." % test.type)
+            logger.error("Type %s is not a valid test type." % test.type)
+
     logger.info('Starting %s test(s)' % len(tests))
     result = unittest.TextTestRunner(verbosity=1).run(test_suite)
     errors = len(result.errors)
