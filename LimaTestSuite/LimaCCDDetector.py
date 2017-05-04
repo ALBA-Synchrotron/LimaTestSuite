@@ -69,7 +69,16 @@ class LimaDetector(object):
                              }
 
         self._fileFormat = {'CBF': Core.CtSaving.CBFFormat,
-                            'EDF': Core.CtSaving.EDF
+                            'CBF_MINI_HEADER': Core.CtSaving.CBFMiniHeader,
+                            'EDF': Core.CtSaving.EDF,
+                            'EDF_CONCAT': Core.CtSaving.EDFConcat,
+                            'EDF_GZ': Core.CtSaving.EDFGZ,
+                            'EDF_LZ4': Core.CtSaving.EDFLZ4,
+                            'HDF5': Core.CtSaving.HDF5,
+                            'NXS': Core.CtSaving.NXS,
+                            'RAW': Core.CtSaving.RAW,
+                            'TIFF': Core.CtSaving.TIFFFormat,
+                            'FITZ': Core.CtSaving.FITS
                             }
         self._acqMode = {'SINGLE': Core.Single
                          }
