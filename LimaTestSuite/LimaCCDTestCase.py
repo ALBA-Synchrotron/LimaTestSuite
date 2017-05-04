@@ -1,5 +1,6 @@
 from unittest import TestCase
 from LimaTestSuite.LimaCCDDetector import LimaDetector
+import time
 import logging
 import sys
 
@@ -45,7 +46,8 @@ class LimaCCDAquisitionTest(LimaCCDBaseTestCase):
         try:
             self.detector.start(self.abort)
         except RuntimeError as e:
-            self.fail("%s FAILED with msg = %s" % (self.name, e.message))
+            self.fail("%s FAILED with msg = %s" % (self.name, str(e)))
 
     def tearDown(self):
         self.logger.debug('*** Teardown for test %s ***' % self.name)
+        del self.detector

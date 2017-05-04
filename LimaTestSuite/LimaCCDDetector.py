@@ -138,6 +138,7 @@ class LimaDetector(object):
             self.cam = det.get_camera()
             self.hwi = det.get_hwinterface()
             # Common API from Lima
+            # TODO Needs protection in case of problem constructing the detector
             self.ct = Core.CtControl(self.hwi)
             self.ct_acq = self.ct.acquisition()
             self.ct_save = self.ct.saving()
@@ -150,6 +151,17 @@ class LimaDetector(object):
         #self._AcqConfig = det.get_acq_defaults()
         #self._SavingConfig = det.get_saving_defaults()
         #self.set_default_parameters()
+        self.logger.debug("Exit init")
+
+    def __del__(self):
+        self.logger.debug("Deletting")
+        del self.ct_save
+        del self.ct_acq
+        del self.ct
+        del self.hwi
+        del self.cam
+        # Wait for server desconnection befor any other re-connection
+        time.sleep(0.1)
 
     def _update_config_from_dict(self, config, params):
         """
@@ -308,11 +320,6 @@ class LimaDetector(object):
         except Exception, e:
             raise RuntimeError('Error requesting detector status:\n%s', e)
 
-    def delete(self):
-        try:
-            self.cam.exit()
-        except Exception, e:
-            raise RuntimeError('Error deleting detector object:\n%s', e)
 
     @staticmethod
     def set_debug(debug=True):
