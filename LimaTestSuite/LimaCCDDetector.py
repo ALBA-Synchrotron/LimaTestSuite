@@ -5,6 +5,7 @@ from Lima import Core
 from LimaTestSuite import get_dict, ADXVSocket
 import logging
 
+WAIT_TIMEOUT = 10
 
 class SpecificDetector(object):
     def __init__(self):
@@ -257,7 +258,7 @@ class LimaDetector(object):
         self.logger.debug('Starting acquisition')
         # last_img_sent = -1
         # last_img = self.ct.getStatus().ImageCounters.LastImageSaved
-        period = self.ct_acq.getAcqExpoTime() + 1
+        period = self.ct_acq.getAcqExpoTime() + self.ct_acq.getLatencyTime()
         img_idx = self.ct_acq.getAcqNbFrames() - 1
 
         counter = 0
@@ -266,6 +267,10 @@ class LimaDetector(object):
         while True:
             prev_acq = self.ct.getStatus().ImageCounters.LastImageAcquired
             prev_saved = self.ct.getStatus().ImageCounters.LastImageSaved
+            acq_status = self.ct.getStatus().AcquisitionStatus
+            self.logger.debug("Last acq %d saved %d" % (prev_acq, prev_saved))
+            self.logger.debug("Acq Status %d" % acq_status)
+
             if prev_saved == img_idx:
                 break
 
@@ -276,25 +281,25 @@ class LimaDetector(object):
                 break
 
             # Check acq finished with status Ready
-            if Core.AcqReady == self.ct.getStatus().AcquisitionStatus and\
-                prev_saved != img_idx:
+            if Core.AcqReady == acq_status and prev_saved != img_idx:
                 raise RuntimeError(
                     "Acquisition finished with state=READY but images were not"
                     " generated properly.")
 
             time.sleep(period)
             last_acq = self.ct.getStatus().ImageCounters.LastImageAcquired
-            if not (last_acq - prev_acq) and last_acq != img_idx:
-                raise RuntimeError("Acquisition time has been exceeded.")
-            if counter > 5:
+            # if not (last_acq - prev_acq) and last_acq != img_idx:
+            #     raise RuntimeError("Acquisition time has been exceeded.")
+
+            # TODO review criteria to check if saving has hung
+            #if counter > 5:
+            if False:
                 if last_saved - prev_saved < 1:
                     raise RuntimeError("Images cannot be saved.")
                 counter = 0
                 last_saved = self.ct.getStatus().ImageCounters.LastImageSaved
             else:
                 counter += 1
-
-            self.logger.debug("%s" % repr(self.ct.getStatus()))
 
 
             # if self.adxv_host and last_img_sent < last_img:
@@ -304,9 +309,18 @@ class LimaDetector(object):
             #     self.logger.debug('sending image %s' % fn)
             # else:
             #     self.logger.debug("%s" % repr(self.ct.getStatus()))
+            
+        # TODO define waiting timeout in test config
+        for i in range(WAIT_TIMEOUT):
+            if Core.AcqReady == self.ct.getStatus().AcquisitionStatus:
+                break
+            time.sleep(1)
+            self.logger.debug("Waiting")
 
-        if not Core.AcqReady == self.ct.getStatus().AcquisitionStatus:
-            raise RuntimeError("Acquisition did not finished in READY state.")
+        acq_status = self.ct.getStatus().AcquisitionStatus
+        if not Core.AcqReady == acq_status:
+            raise RuntimeError("Acquisition did not finished in READY state." +
+                               " [S%d]" % acq_status)
 
     def stop(self):
         try:
