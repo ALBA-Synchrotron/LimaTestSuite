@@ -1,8 +1,6 @@
 from unittest import TestCase
 from LimaTestSuite.LimaCCDDetector import LimaDetector
-import time
 import logging
-import sys
 
 
 class LimaCCDBaseTestCase(TestCase):
@@ -37,9 +35,9 @@ class LimaCCDBaseTestCase(TestCase):
         raise NotImplementedError('You must implement it.')
 
 
-class LimaCCDAquisitionTest(LimaCCDBaseTestCase):
+class LimaCCDAcquisitionTest(LimaCCDBaseTestCase):
     def __init__(self, config, abort=False):
-        super(LimaCCDAquisitionTest, self).__init__(config)
+        super(LimaCCDAcquisitionTest, self).__init__(config)
         self.abort = abort
 
     def runTest(self):

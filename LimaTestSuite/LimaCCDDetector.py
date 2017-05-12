@@ -2,29 +2,14 @@ import time
 import os
 import sys
 from Lima import Core
-from LimaTestSuite import get_dict, ADXVSocket
+from LimaTestSuite import get_dict
 import logging
 
 WAIT_TIMEOUT = 10
 
+
 class SpecificDetector(object):
     def __init__(self):
-
-        # self._AcqDefaults = {'acqExpoTime': 1,
-        #                       'acqNbFrames': 10,
-        #                       'acqMode': 'Single',
-        #                       'triggerMode': 'Internal',
-        #                       'lattencyTime': 0
-        #                       }
-        #
-        # self._SavingDefaults = {'directory': './',
-        #                          'prefix': 'img_',
-        #                          'suffix': '.cbf',
-        #                          'fileFormat': 'CBF',
-        #                          'savingMode': 'AUTO_FRAME',
-        #                          'overwritePolicy': 'OVERWRITE'
-        #                          }
-
         self._AcqDefaults = {}
         self._SavingDefaults = {}
 
@@ -56,8 +41,6 @@ class SpecificDetector(object):
 class LimaDetector(object):
 
     def __init__(self, config):
-        # The config is a LimaTestConfiguration object
-        #
         # A dictionary is defined for each Lima Core constants that has
         # a discrete set of possible values. The naming convention is:
         # _<ConstantName>
@@ -106,13 +89,6 @@ class LimaDetector(object):
         self.end_time = 0.0
 
         self.logger = logging.getLogger('LimaTestSuite')
-
-        # OPTIONAL: External visualization software
-        # self.adxv_host = adxv_host
-        # if self.adxv_host:
-        #     self.adxv_socket = ADXVSocket(self.adxv_host)
-        #     self.logger.debug("ADXV socket communication is ON")
-        # # Init the detector specific plugin
         det_type = config.det_type
         host = config.host
         port = config.port
@@ -121,7 +97,6 @@ class LimaDetector(object):
 
         self._AcqConfig = config.acq_params
         self._SavingConfig = config.saving_params
-        #self.set_default_parameters()
 
     def init(self, det_type, host, port):
         # We try to load a module containing the detector object
@@ -155,22 +130,15 @@ class LimaDetector(object):
         except Exception as e:
             msg = "Cannot create Lima Control objects for detector, %s" % str(e)
             raise ValueError(msg)
-        # Get detector default configurations provided by the specified Detector
-        # class and apply it by default. If no defaults applied, the correct
-        # acquisition cannot be guaranteed.
-        #self._AcqConfig = det.get_acq_defaults()
-        #self._SavingConfig = det.get_saving_defaults()
-        #self.set_default_parameters()
-        self.logger.debug("Exit init")
 
     def __del__(self):
-        self.logger.debug("Deletting")
+        self.logger.debug("Deleting")
         del self.ct_save
         del self.ct_acq
         del self.ct
         del self.hwi
         del self.cam
-        # Wait for server desconnection befor any other re-connection
+        # Wait for server to disconnect before any other re-connection
         time.sleep(0.1)
 
     def _update_config_from_dict(self, config, params):
@@ -189,8 +157,6 @@ class LimaDetector(object):
             value_dict = get_dict(self, key)
             if value_dict:
                 value = value_dict[value.upper()]
-            # No dynamic casting required
-            # _type = type(value)
             setattr(params, par, value)
 
     def update_acq_params(self, config):
@@ -215,15 +181,11 @@ class LimaDetector(object):
         self._update_config_from_dict(config, p)
         self.ct_save.setParameters(p)
 
-    # def set_default_parameters(self):
-    #     self.update_saving_params(self._SavingConfig)
-    #     self.update_acq_params(self._AcqConfig)
-
     def prepare_acq(self):
         self.ct.prepareAcq()
 
-    def set_acq_parameters(self, exp_time, frames, latency=0, trigger='Internal',
-                           acq_mode='single'):
+    def set_acq_parameters(self, exp_time, frames, latency=0,
+                           trigger='Internal', acq_mode='single'):
 
         d = {'acqExpoTime': exp_time,
              'acqNbFrames': frames,
@@ -233,13 +195,13 @@ class LimaDetector(object):
              }
         self.update_acq_params(d)
 
-    def set_saving_parameters(self, directory, prefix, suffix, format,
+    def set_saving_parameters(self, directory, prefix, suffix, img_format,
                               mode='auto_frame', overwrite='overwrite'):
 
         d = {'directory': directory,
              'prefix': prefix,
              'suffix': suffix,
-             'fileFormat ': format,
+             'fileFormat ': img_format,
              'savingMode': mode,
              'overwritePolicy': overwrite
              }
@@ -247,7 +209,7 @@ class LimaDetector(object):
 
     def print_acq_params(self):
         for k,v in self._AcqConfig.iteritems():
-            self.logger.debug("Aquisition param: %s = %s" % (k, v))
+            self.logger.debug("Acquisition param: %s = %s" % (k, v))
 
     def print_saving_params(self):
         for k,v in self._AcqConfig.iteritems():
@@ -256,13 +218,8 @@ class LimaDetector(object):
     def start(self, abort=False):
         try:
             self.ct.startAcq()
-#            self.start_time = time.time()
         except Exception, e:
             raise RuntimeError('Error starting acquisition:\n%s', e)
-
-        # if not Core.AcqRunning == self.ct.getStatus().AcquisitionStatus:
-        #     raise RuntimeError("Acquisition cannot not start.")
-
 
         self.logger.debug('Starting acquisition')
         # last_img_sent = -1
@@ -296,12 +253,12 @@ class LimaDetector(object):
                     " generated properly.")
 
             time.sleep(period)
-            last_acq = self.ct.getStatus().ImageCounters.LastImageAcquired
+            # last_acq = self.ct.getStatus().ImageCounters.LastImageAcquired
             # if not (last_acq - prev_acq) and last_acq != img_idx:
             #     raise RuntimeError("Acquisition time has been exceeded.")
 
             # TODO review criteria to check if saving has hung
-            #if counter > 5:
+            # if counter > 5:
             if False:
                 if last_saved - prev_saved < 1:
                     raise RuntimeError("Images cannot be saved.")
@@ -310,15 +267,6 @@ class LimaDetector(object):
             else:
                 counter += 1
 
-
-            # if self.adxv_host and last_img_sent < last_img:
-            #     last_img_sent = last_img
-            #     fn = self.get_last_filename()
-            #     self.adxv_socket.send_image_name(fn)
-            #     self.logger.debug('sending image %s' % fn)
-            # else:
-            #     self.logger.debug("%s" % repr(self.ct.getStatus()))
-            
         # TODO define waiting timeout in test config
         for i in range(WAIT_TIMEOUT):
             if Core.AcqReady == self.ct.getStatus().AcquisitionStatus:
@@ -342,7 +290,6 @@ class LimaDetector(object):
             return self.ct.Status()
         except Exception, e:
             raise RuntimeError('Error requesting detector status:\n%s', e)
-
 
     @staticmethod
     def set_debug(debug=True):

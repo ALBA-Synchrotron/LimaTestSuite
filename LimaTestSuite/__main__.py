@@ -2,10 +2,11 @@ import unittest
 import os
 import logging
 from LimaConfigHelper import LimaTestParser
-from LimaCCDTestCase import LimaCCDAquisitionTest
-from LimaTestSuite import logger, _str_date_now
+from LimaCCDTestCase import LimaCCDAcquisitionTest
+from LimaTestSuite import _str_date_now
 
-TEST_TYPES = ["acquisition","abort"]
+TEST_TYPES = ["acquisition", "abort"]
+
 
 def run_test(filename):
 
@@ -18,10 +19,10 @@ def run_test(filename):
     ntests = 0
     for test in tests:
         if test.type.lower() in TEST_TYPES:
-            if test.type.lower() == TEST_TYPES[0]: #Acquisition
-                case = LimaCCDAquisitionTest(test)
-            elif test.type.lower() == TEST_TYPES[1]: #Abort
-                case = LimaCCDAquisitionTest(test, True)
+            if test.type.lower() == TEST_TYPES[0]:
+                case = LimaCCDAcquisitionTest(test)
+            elif test.type.lower() == TEST_TYPES[1]:
+                case = LimaCCDAcquisitionTest(test, True)
             logger.info("Adding test --> %s [r%d] [%s]" % (
                     test.name, test.repeat, test.type))
             for i in range(test.repeat):
@@ -45,11 +46,8 @@ def run():
     description = 'Basic unittesting for Lima detector'
     epilog = 'ctbeamlines@cells.es'
 
-    parser = argparse.ArgumentParser(description=description,
-                                 epilog=epilog)
-
+    parser = argparse.ArgumentParser(description=description, epilog=epilog)
     parser.add_argument("config_file", type=str, help="Test configuration file")
-
     parser.add_argument("--log-level", type=str, help="Activate debug")
     parser.add_argument("--path", "-p", type=str, help="Output log folder",
                         default="")
@@ -57,6 +55,7 @@ def run():
     args = parser.parse_args()
 
     if args.log_level == 'debug':
+        logger = logging.getLogger('LimaTestSuite')
         logger.setLevel(logging.DEBUG)
     path = args.path
     filename = "lima_ts_{0}.log".format(_str_date_now())

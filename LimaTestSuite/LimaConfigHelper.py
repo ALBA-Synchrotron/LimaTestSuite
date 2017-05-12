@@ -26,70 +26,39 @@ class LimaTestConfiguration(object):
                    'nbframes': int
                    }
 
-    def __init__(self, name, type, repeat, det_type, host, port, acq, saving):
+    def __init__(self, name, ttype, repeat, det_type, host, port, acq, saving):
         self.name = name
-        self.type = type
+        self.type = ttype
         self.repeat = repeat
         self.det_type = det_type
         self.host = host
         self.port = port
         self.acq_params = {}
         self.saving_params = {}
-        # self.adxv_host = adxv_host
-        # self.adxv_port = adxv_port
-
-        # # Default configurations
-        # acq_keys = self.ACQ_KEYS.keys()
-        # self._acq_defaults = dict.fromkeys(acq_keys)
-        # saving_keys = self.SAVING_KEYS.keys()
-        # self._saving_defaults = dict.fromkeys(saving_keys)
-
-        # # Update detector configuration defaults
-        # self._acq_defaults.update(acq)
-        # self._saving_defaults.update(saving)
 
         # Update detector configuration defaults
         self.acq_params.update(acq)
         self.saving_params.update(saving)
 
     def get_copy(self, name, type, repeat, acq, saving):
-        '''Copy default configuration overwriting specific config'''
+        """
+        Copy default configuration overwriting specific config
+
+        :param name:
+        :param type:
+        :param repeat:
+        :param acq:
+        :param saving:
+        :return:
+        """
+
         acq_params = self.acq_params.copy()
         saving_params = self.saving_params.copy()
         acq_params.update(acq)
         saving_params.update(saving)
-        return LimaTestConfiguration(name, type, repeat, self.det_type, self.host,
-                                     self.port, acq_params, saving_params)
-
-    # @property
-    # def acq_defaults(self):
-    #     return self._acq_defaults.copy()
-    #
-    # @property
-    # def saving_defaults(self):
-    #     return self._saving_defaults.copy()
-
-    # def get_detector_name(self):
-    #     return self.det_type
-    #
-    # def get_test_name(self):
-    #     return self.name
-
-    # def __repr__(self):
-    #     msg = "{0}\n".format(50*"#")
-    #     msg += "Test name: {0} | ".format(self.name)
-    #     msg += "Test type: {0}\n".format(self.type)
-    #     msg += "Detector type: {0}\n".format(self.det_type)
-    #     msg += "{0}\n".format(50 * "-")
-    #     msg += "Acquisition parameters:\n"
-    #     for k, v in self._acq_defaults.iteritems():
-    #         msg += "  {0} = {1}\n".format(k, v)
-    #     msg += "{0}\n".format(50 * "-")
-    #     msg += "Saving parameters:\n"
-    #     for k, v in self._saving_defaults.iteritems():
-    #         msg += "  {0} = {1}\n".format(k, v)
-    #     msg += "{0}\n".format(50 * "#")
-    #     return msg
+        return LimaTestConfiguration(name, type, repeat, self.det_type,
+                                     self.host, self.port, acq_params,
+                                     saving_params)
 
 
 class LimaTestParser(object):
@@ -131,9 +100,6 @@ class LimaTestParser(object):
         host = eval(self.config.get(self.default_sections['Detector'], 'host'))
         port = eval(self.config.get(self.default_sections['Detector'], 'port'))
 
-        # adxv_host = self.config.get(self.default_sections['ADXV'], 'host')
-        # adxv_port = self.config.get(self.default_sections['ADXV'], 'port')
-
         acq = {}
         saving = {}
         acq_section = self.default_sections['Acq']
@@ -156,8 +122,8 @@ class LimaTestParser(object):
             return None
 
         # Check no None value is present in default detector configuration:
-        if any(v == None for v in acq.values()) or \
-           any(v == None for v in saving.values()):
+        if any(v is None for v in acq.values()) or \
+           any(v is None for v in saving.values()):
             self.logger.warning("The default values set is not complete")
             return None
 
@@ -167,7 +133,6 @@ class LimaTestParser(object):
             self.logger.debug("Default configuration loaded successfully")
         else:
             self.logger.error("Error loading default configuration")
-
 
     def _get_tests_list(self):
         # Get the test names from cfg file ( i.e. section names)
@@ -232,10 +197,8 @@ class LimaTestParser(object):
 
         return test
 
-
     def get_tests(self):
         return self.tests
-
 
 
 if __name__ == "__main__":
@@ -243,11 +206,11 @@ if __name__ == "__main__":
     description = 'Basic unittesting for Lima detector'
     epilog = 'CTBeamlines'
 
-    parser = argparse.ArgumentParser(description=description,
-                                 epilog=epilog)
+    parser = argparse.ArgumentParser(description=description, epilog=epilog)
 
     parser.add_argument("config_file", type=str, help="Test configuration file")
 
-    parser.add_argument("--debug", action="store_true", help="Activate lima debug")
+    parser.add_argument("--debug", action="store_true",
+                        help="Activate lima debug")
     args = parser.parse_args()
     LimaTestParser(args.config_file)

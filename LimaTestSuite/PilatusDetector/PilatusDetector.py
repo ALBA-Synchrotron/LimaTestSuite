@@ -1,4 +1,3 @@
-import time
 import logging
 from LimaTestSuite.LimaCCDDetector import SpecificDetector
 from Lima import Pilatus
@@ -7,7 +6,7 @@ from Lima import Pilatus
 class PilatusDetector(SpecificDetector):
     def __init__(self, host, port):
         super(PilatusDetector, self).__init__()
-
+        self.logger = logging.getLogger('LimaTestSuite')
         try:
             if not port:
                 self.cam = Pilatus.Camera()
@@ -16,5 +15,4 @@ class PilatusDetector(SpecificDetector):
             self.hwint = Pilatus.Interface(self.cam)
             self.logger.debug("CAM %s HWI %s" % (self.cam, self.hwint))
         except Exception, e:
-            logging.error('Error initializing detector object: \n%s', e)
-
+            self.logger.error('Error initializing detector object: \n%s', e)
