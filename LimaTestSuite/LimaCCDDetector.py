@@ -242,7 +242,9 @@ class LimaDetector(object):
 
             if abort:
                 self.stop()
-                time.sleep(3)
+                time.sleep(2)
+                self.prepare_acq()
+                time.sleep(2)
                 self.logger.debug("%s" % repr(self.ct.getStatus()))
                 break
 
