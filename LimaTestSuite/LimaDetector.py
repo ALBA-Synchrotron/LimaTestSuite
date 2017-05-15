@@ -258,7 +258,7 @@ class LimaCoreDetector(LimaDetector):
 
     @LimaDetector.frames.getter
     def frames(self):
-        return self.ct_acq.getAcqNbFrames() - 1
+        return self.ct_acq.getAcqNbFrames()
 
     @LimaDetector.last_image.getter
     def last_image(self):
@@ -275,7 +275,6 @@ class LimaCoreDetector(LimaDetector):
     @LimaDetector.status.getter
     def status(self):
         return self.ct.Status()
-
 
     @staticmethod
     def set_debug(debug=True):
