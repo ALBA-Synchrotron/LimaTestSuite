@@ -1,5 +1,5 @@
 import logging
-from LimaTestSuite.LimaCCDDetector import SpecificDetector
+from LimaTestSuite.LimaDetector import SpecificDetector
 from Lima import Pilatus
 
 

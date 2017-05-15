@@ -2,7 +2,7 @@ import unittest
 import os
 import logging
 from LimaConfigHelper import LimaTestParser
-from LimaCCDTestCase import LimaCCDAcquisitionTest
+from LimaTestCase import LimaCCDAcquisitionTest
 from LimaTestSuite import _str_date_now
 
 TEST_TYPES = ["acquisition", "abort"]
