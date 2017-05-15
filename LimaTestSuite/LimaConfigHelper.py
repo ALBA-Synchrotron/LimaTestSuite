@@ -26,13 +26,15 @@ class LimaTestConfiguration(object):
                    'nbframes': int
                    }
 
-    def __init__(self, name, ttype, repeat, det_type, host, port, acq, saving):
+    def __init__(self, name, ttype, repeat, det_type, host, port, acq, saving,
+                 device_name):
         self.name = name
         self.type = ttype
         self.repeat = repeat
         self.det_type = det_type
         self.host = host
         self.port = port
+        self.device_name = device_name
         self.acq_params = {}
         self.saving_params = {}
 
@@ -58,7 +60,7 @@ class LimaTestConfiguration(object):
         saving_params.update(saving)
         return LimaTestConfiguration(name, type, repeat, self.det_type,
                                      self.host, self.port, acq_params,
-                                     saving_params)
+                                     saving_params, self.device_name)
 
 
 class LimaTestParser(object):
@@ -80,7 +82,8 @@ class LimaTestParser(object):
 
         self.default_sections = {'Detector': 'Detector',
                                  'Acq': 'AcqDefaults',
-                                 'Saving': 'SavingDefaults'
+                                 'Saving': 'SavingDefaults',
+                                 'Tango': 'Tango',
                                  }
 
         self.default_test = None
@@ -99,7 +102,8 @@ class LimaTestParser(object):
         det_type += 'Detector'
         host = eval(self.config.get(self.default_sections['Detector'], 'host'))
         port = eval(self.config.get(self.default_sections['Detector'], 'port'))
-
+        device_name = eval(self.config.get(self.default_sections['Tango'],
+                                           'LimaCCD'))
         acq = {}
         saving = {}
         acq_section = self.default_sections['Acq']
@@ -128,7 +132,8 @@ class LimaTestParser(object):
             return None
 
         self.default_test = LimaTestConfiguration('', None, 1, det_type, host,
-                                                  port, acq, saving)
+                                                  port, acq, saving,
+                                                  device_name)
         if self.default_test is not None:
             self.logger.debug("Default configuration loaded successfully")
         else:
@@ -189,7 +194,8 @@ class LimaTestParser(object):
         self.logger.debug("Test directory is %s" % path)
 
         if self.default_test and t_type:
-            test = self.default_test.get_copy(name, t_type, t_repeat, acq, saving)
+            test = self.default_test.get_copy(name, t_type, t_repeat, acq,
+                                              saving)
         else:
             msg = 'Non valid test found, please review config file [%s, %s]' % \
                 (str(self.default_test), str(t_type))
@@ -201,16 +207,3 @@ class LimaTestParser(object):
         return self.tests
 
 
-if __name__ == "__main__":
-    import argparse
-    description = 'Basic unittesting for Lima detector'
-    epilog = 'CTBeamlines'
-
-    parser = argparse.ArgumentParser(description=description, epilog=epilog)
-
-    parser.add_argument("config_file", type=str, help="Test configuration file")
-
-    parser.add_argument("--debug", action="store_true",
-                        help="Activate lima debug")
-    args = parser.parse_args()
-    LimaTestParser(args.config_file)
