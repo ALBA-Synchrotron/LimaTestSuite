@@ -11,8 +11,8 @@ class LimaCCDBaseTestCase(TestCase):
         self.tango_mode = tango_mode
         self.test_config = config
         self.name = config.name
-        if debug:
-            LimaDetector.set_debug()
+        if debug and not tango_mode:
+            LimaCoreDetector.set_debug()
         self.logger = logging.getLogger('LimaTestSuite')
 
     def fail(self, msg=None):
