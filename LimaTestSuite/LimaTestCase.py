@@ -42,8 +42,8 @@ class LimaCCDBaseTestCase(TestCase):
 
 
 class LimaCCDAcquisitionTest(LimaCCDBaseTestCase):
-    def __init__(self, config, abort=False):
-        super(LimaCCDAcquisitionTest, self).__init__(config)
+    def __init__(self, config, abort=False, debug=False, tango_mode=False):
+        super(LimaCCDAcquisitionTest, self).__init__(config, debug, tango_mode)
         self.abort = abort
 
     def runTest(self):
