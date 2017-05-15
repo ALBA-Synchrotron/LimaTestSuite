@@ -5,6 +5,12 @@ from LimaTestSuite.LimaDetector import LimaDetector
 
 
 class LimaTangoDetector(LimaDetector):
+    _tango_tmode = {'INTERNAL': 'INTERNAL_TRIGGER',
+                    'INTERNAL_MULTI_TRIGGER': 'INTERNAL_TRIGGER_MULTI',
+                    'EXTERNAL_TRIGGER': 'EXTERNAL_TRIGGER',
+                    'EXTERNAL_MULTI_TRIGGER': 'EXTERNAL_TRIGGER_MULTI',
+                    'EXTERNAL_GATE': 'EXTERNAL_GATE',
+                    }
 
     def init_hw(self):
         self.device = PyTango.DeviceProxy(self._config.device_name)
@@ -26,11 +32,12 @@ class LimaTangoDetector(LimaDetector):
         exp_time = self._AcqConfig['acqExpoTime']
         frames = self._AcqConfig['acqNbFrames']
         acq_mode = self._AcqConfig['acqMode']
-        trigger_mode = self._AcqConfig['triggerMode']
+        trigger_mode = self._tango_tmode[self._AcqConfig['triggerMode'].upper()]
         latency_time = self._AcqConfig['latencyTime']
         acc_expo_time = self._AcqConfig['accMaxExpoTime']
         concat_frames = self._AcqConfig['concatNbFrames']
 
+        
         self.device.write_attribute('acq_nb_frames', frames)
         self.device.write_attribute('acq_expo_time', exp_time)
         self.device.write_attribute('latency_time', latency_time)
@@ -40,23 +47,23 @@ class LimaTangoDetector(LimaDetector):
         self.device.write_attribute('concat_nb_frames', concat_frames)
 
         # Saving parameters
-        directory = self._AcqConfig['directory']
-        prefix = self._AcqConfig['prefix']
-        suffix = self._AcqConfig['suffix']
-        next_nb = self._AcqConfig['nextNumber']
-        file_format = self._AcqConfig['fileFormat']
-        saving_mode = self._AcqConfig['savingMode']
-        overwrite = self._AcqConfig['overwritePolicy']
-        frames_file = self._AcqConfig['framesPerFile']
+        directory = self._SavingConfig['directory']
+        prefix = self._SavingConfig['prefix']
+        suffix = self._SavingConfig['suffix']
+        next_nb = self._SavingConfig['nextNumber']
+        file_format = self._SavingConfig['fileFormat']
+        saving_mode = self._SavingConfig['savingMode']
+        overwrite = self._SavingConfig['overwritePolicy']
+        frames_file = self._SavingConfig['framesPerFile']
 
         # TODO ask to the mailing list how to set this value
-        nb_frames = self._AcqConfig['nbframes']
+        nb_frames = self._SavingConfig['nbframes']
 
         self.device.write_attribute('saving_directory', directory)
         self.device.write_attribute('saving_prefix', prefix)
         self.device.write_attribute('saving_suffix', suffix)
         self.device.write_attribute('saving_format', file_format)
-        self.device.write_attribute('saving_frames_per_file', frames_file)
+        self.device.write_attribute('saving_frame_per_file', frames_file)
         self.device.write_attribute('saving_mode', saving_mode)
         self.device.write_attribute('saving_overwrite_policy', overwrite)
         self.device.write_attribute('saving_next_number', next_nb)
