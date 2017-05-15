@@ -94,16 +94,15 @@ class LimaCCDAcquisitionTest(LimaCCDBaseTestCase):
                 counter += 1
 
             # # TODO define waiting timeout in test config
-            for i in range(5):
-                if Core.AcqReady == self.detector.acq_status:
-                    break
-                time.sleep(1)
-                self.logger.debug("Waiting")
+            # for i in range(5):
+            #     if Core.AcqReady == self.detector.acq_status:
+            #         break
+            #     time.sleep(1)
+            #     self.logger.debug("Waiting")
 
         if not Core.AcqReady == self.detector.acq_status:
             self.fail('Acquisition did not finished in READY state. [S%d]' %
                       acq_status)
-
 
     def tearDown(self):
         self.logger.debug('*** Teardown for test %s ***' % self.name)
