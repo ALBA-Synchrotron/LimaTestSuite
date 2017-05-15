@@ -201,16 +201,3 @@ class LimaTestParser(object):
         return self.tests
 
 
-if __name__ == "__main__":
-    import argparse
-    description = 'Basic unittesting for Lima detector'
-    epilog = 'CTBeamlines'
-
-    parser = argparse.ArgumentParser(description=description, epilog=epilog)
-
-    parser.add_argument("config_file", type=str, help="Test configuration file")
-
-    parser.add_argument("--debug", action="store_true",
-                        help="Activate lima debug")
-    args = parser.parse_args()
-    LimaTestParser(args.config_file)
