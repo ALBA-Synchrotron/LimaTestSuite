@@ -102,8 +102,12 @@ class LimaTestParser(object):
         det_type += 'Detector'
         host = eval(self.config.get(self.default_sections['Detector'], 'host'))
         port = eval(self.config.get(self.default_sections['Detector'], 'port'))
-        device_name = eval(self.config.get(self.default_sections['Tango'],
-                                           'LimaCCD'))
+        if self.config.has_section(self.default_sections['Tango']):
+            device_name = self.config.get(self.default_sections['Tango'],
+                                          'LimaCCD')
+        else:
+            device_name = None
+
         acq = {}
         saving = {}
         acq_section = self.default_sections['Acq']

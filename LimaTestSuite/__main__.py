@@ -18,6 +18,12 @@ def run_test(filename, debug, tango):
     test_suite = unittest.TestSuite()
     ntests = 0
     for test in tests:
+        if tango:
+            if test.device_name is None:
+                raise RuntimeError('The config file should have the section '
+                                   'Tango with the parameter LimaCCD equal to '
+                                   'instance name.')
+
         if test.type.lower() in TEST_TYPES:
             if test.type.lower() == TEST_TYPES[0]:
                 case = LimaCCDAcquisitionTest(test, abort=False, debug=debug,
