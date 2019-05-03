@@ -53,12 +53,18 @@ def _str_date_now():
     return now.strftime("%Y%m%d_%H%M")
 
 
-def create_test_folder(test_name):
-    cwd = '/tmp/LimaTestSuite'
+def create_test_folder(test_name, base_dir=None):
+    cwd = 'tmp/LimaTestSuite'
     folder = "{0}_{1}".format(test_name, _str_date_now())
     test_path = os.path.join(cwd, folder)
+    if base_dir:
+        test_path = os.path.join(base_dir, test_path)
+    else:
+        test_path = os.path.join(os.sep, test_path)
+
     if not os.path.exists(test_path):
        os.makedirs(test_path)
+
     return test_path
 
 
