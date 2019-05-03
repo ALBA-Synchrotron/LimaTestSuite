@@ -168,6 +168,7 @@ class LimaTestParser(object):
         saving = {}
         t_type = None
         t_repeat = 1
+        base_dir = None
 
         acq_keys = LimaTestConfiguration.ACQ_KEYS.keys()
         saving_keys = LimaTestConfiguration.SAVING_KEYS.keys()
@@ -180,11 +181,10 @@ class LimaTestParser(object):
                 _value = LimaTestConfiguration.ACQ_KEYS[key](value)
                 acq.update({key: _value})
             elif key in saving_keys:
+                _value = LimaTestConfiguration.SAVING_KEYS[key](value)
+                saving.update({key: _value})
                 if key.lower() == 'directory':
-                    self.logger.debug('directory is assigned automatically')
-                else:
-                    _value = LimaTestConfiguration.SAVING_KEYS[key](value)
-                    saving.update({key: _value})
+                    base_dir = saving['directory']
             elif key == "type":
                 t_type = value
             elif key == "repeat":
@@ -192,8 +192,7 @@ class LimaTestParser(object):
             else:
                 msg = 'Non valid test key <%s> found in test %s' % (key, name)
                 raise Exception(msg)
-
-        path = create_test_folder(name)
+        path = create_test_folder(name, base_dir=base_dir)
         saving.update({'directory': path})
         self.logger.debug("Test directory is %s" % path)
 
