@@ -14,5 +14,5 @@ class PilatusDetector(SpecificDetector):
                 self.cam = Pilatus.Camera(port)
             self.hwint = Pilatus.Interface(self.cam)
             self.logger.debug("CAM %s HWI %s" % (self.cam, self.hwint))
-        except Exception, e:
+        except Exception as e:
             self.logger.error('Error initializing detector object: \n%s', e)
