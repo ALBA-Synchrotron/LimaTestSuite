@@ -44,7 +44,7 @@ def run_test(filename, debug, tango):
     errors = len(result.errors)
     failures = len(result.failures)
 
-    logger.info('Results: Error(s) = %d, Failure(s) = %d' % ( errors, failures))
+    logger.info('Results: Error(s) = %d, Failure(s) = %d' % (errors, failures))
     for fail in result.failures:
         logger.info(fail[-1].split("\n")[-2])
 
@@ -55,7 +55,7 @@ def run():
     epilog = 'ctbeamlines@cells.es'
 
     parser = argparse.ArgumentParser(description=description, epilog=epilog)
-    parser.add_argument("config_file", type=str, help="Test configuration file")
+    parser.add_argument("config_file", type=str, help="Test config file")
     parser.add_argument("--log-level", type=str, help="Activate debug")
     parser.add_argument("--path", "-p", type=str, help="Output log folder",
                         default="")
@@ -74,6 +74,7 @@ def run():
     filename = os.path.join(path, filename)
     logging.basicConfig(filename=filename)
     run_test(args.config_file, args.debug_core, args.tango)
+
 
 if __name__ == "__main__":
     run()

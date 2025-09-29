@@ -52,8 +52,6 @@ class LimaCCDAcquisitionTest(LimaCCDBaseTestCase):
         self.logger.debug('Starting acquisition')
         acq_time = self.detector.acq_time
         img_idx = self.detector.frames - 1
-        counter = 0
-        last_saved = 0
         while True:
             prev_acq = self.detector.last_image
             prev_saved = self.detector.last_image_saved
@@ -88,19 +86,19 @@ class LimaCCDAcquisitionTest(LimaCCDBaseTestCase):
 
             # TODO review criteria to check if saving has hung
             # if counter > 5:
-            #if False:
+            # if False:
             #    if last_saved - prev_saved < 1:
             #        self.fail('Images cannot be saved.')
             #    counter = 0
             #    last_saved = self.detector.last_image_saved
-            #else:
+            # else:
             #    counter += 1
-                  
+
         if not Core.AcqReady == self.detector.acq_status:
             self.fail('Acquisition did not finished in READY state. [S%d]' %
                       self.detector.acq_status)
-      
+
     def tearDown(self):
         self.logger.debug('*** Teardown for test %s ***' % self.name)
-  
+
         del self.detector

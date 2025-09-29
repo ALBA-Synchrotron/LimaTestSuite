@@ -15,7 +15,6 @@ class LimaTangoDetector(LimaDetector):
     def init_hw(self):
         self.device = PyTango.DeviceProxy(self._config.device_name)
 
-
     def __del__(self):
         self.logger.debug("Deleting")
         # Wait for server to disconnect before any other re-connection
@@ -32,12 +31,12 @@ class LimaTangoDetector(LimaDetector):
         exp_time = self._AcqConfig['acqExpoTime']
         frames = self._AcqConfig['acqNbFrames']
         acq_mode = self._AcqConfig['acqMode']
-        trigger_mode = self._tango_tmode[self._AcqConfig['triggerMode'].upper()]
+        acq_trigger_mode = self._AcqConfig['triggerMode'].upper()
+        trigger_mode = self._tango_tmode[acq_trigger_mode]
         latency_time = self._AcqConfig['latencyTime']
         acc_expo_time = self._AcqConfig['accMaxExpoTime']
         concat_frames = self._AcqConfig['concatNbFrames']
 
-        
         self.device.write_attribute('acq_nb_frames', frames)
         self.device.write_attribute('acq_expo_time', exp_time)
         self.device.write_attribute('latency_time', latency_time)
@@ -57,8 +56,6 @@ class LimaTangoDetector(LimaDetector):
         frames_file = self._SavingConfig['framesPerFile']
 
         # TODO ask to the mailing list how to set this value
-        nb_frames = self._SavingConfig['nbframes']
-
         self.device.write_attribute('saving_directory', directory)
         self.device.write_attribute('saving_prefix', prefix)
         self.device.write_attribute('saving_suffix', suffix)
@@ -111,4 +108,3 @@ class LimaTangoDetector(LimaDetector):
     @LimaDetector.status.getter
     def status(self):
         return self.device.read_attribute('acq_status_fault_error').value
-
