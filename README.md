@@ -17,6 +17,7 @@ Until now, these are the supported detectors:
 
 * Simulator
 * Pilatus
+* PcoDimax
 
 Usage
 -----
