@@ -5,6 +5,7 @@ import logging
 from Lima import Core
 from LimaTestSuite import get_dict
 
+
 class SpecificDetector(object):
     def __init__(self):
         self._AcqDefaults = {}
@@ -86,7 +87,6 @@ class LimaDetector(object):
         self.init_hw()
         self.write_config_hw()
 
-
     def _update_config_from_dict(self, config, params):
         """
         Update the parameters configuration with values from a configuration
@@ -96,7 +96,7 @@ class LimaDetector(object):
         :param params: parameter structure to be filled
         :return: None
         """
-        for key, value in config.iteritems():
+        for key, value in config.items():
             par = key
             msg = "Setting parameter %s = %s" % (par, value)
             self.logger.debug(msg)
@@ -130,47 +130,47 @@ class LimaDetector(object):
         self.write_config_hw()
 
     def print_config(self):
-        for k, v in self._AcqConfig.iteritems():
+        for k, v in self._AcqConfig.items():
             self.logger.debug("Acquisition param: %s = %s" % (k, v))
 
-        for k, v in self._AcqConfig.iteritems():
+        for k, v in self._AcqConfig.items():
             self.logger.debug("Saving param: %s = %s" % (k, v))
 
     @property
     def acq_status(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     @property
     def acq_time(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     @property
     def frames(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     @property
     def last_image(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     @property
     def last_image_saved(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     @property
     def status(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     def init_hw(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     def write_config_hw(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     def start(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
     def stop(self):
-        raise NotImplemented('You should implement it')
+        raise NotImplementedError('You should implement it')
 
 
 class LimaCoreDetector(LimaDetector):
@@ -210,12 +210,12 @@ class LimaCoreDetector(LimaDetector):
             self.cam = det.get_camera()
             self.hwi = det.get_hwinterface()
             # Common API from Lima
-            # TODO Needs protection in case of problem constructing the detector
+            # TODO Needs protection in case of problem constructing detector
             self.ct = Core.CtControl(self.hwi)
             self.ct_acq = self.ct.acquisition()
             self.ct_save = self.ct.saving()
         except Exception as e:
-            msg = "Cannot create Lima Control objects for detector, %s" % str(e)
+            msg = "Cannot create detector Lima Control object, %s" % str(e)
             raise ValueError(msg)
 
     def __del__(self):
@@ -284,4 +284,3 @@ class LimaCoreDetector(LimaDetector):
         else:
             Core.DebParams.setTypeFlags(0x00)
             Core.DebParams.setModuleFlags(0x0000)
-

@@ -1,7 +1,7 @@
 import os
-import ConfigParser
+import configparser
 import logging
-from LimaTestSuite import create_test_folder, debug
+from LimaTestSuite import create_test_folder
 
 
 class LimaTestConfiguration(object):
@@ -72,7 +72,7 @@ class LimaTestParser(object):
     """
     def __init__(self, filename):
         self.logger = logging.getLogger('LimaTestSuite')
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.config.optionxform = str  # preserve Capitals
         self.filename = filename
         if not os.path.isfile(filename):
@@ -92,7 +92,7 @@ class LimaTestParser(object):
         self.load_default_test()
         self.load_tests()
 
-    @debug
+    # @debug
     def load_default_test(self):
         """
         Load info about detector and default test configuration.
@@ -114,11 +114,11 @@ class LimaTestParser(object):
         saving_section = self.default_sections['Saving']
 
         try:
-            for param, t in LimaTestConfiguration.ACQ_KEYS.iteritems():
+            for param, t in LimaTestConfiguration.ACQ_KEYS.items():
                 value = t(self.config.get(acq_section, param))
                 acq.update({param: value})
 
-            for param, t in LimaTestConfiguration.SAVING_KEYS.iteritems():
+            for param, t in LimaTestConfiguration.SAVING_KEYS.items():
                 if param.lower() == 'directory':
                     continue
                 value = t(self.config.get(saving_section, param))
@@ -175,7 +175,7 @@ class LimaTestParser(object):
 
         t_dict = dict(self.config.items(name))
         self.logger.debug('Loading test %s values...' % name)
-        for key, value in t_dict.iteritems():
+        for key, value in t_dict.items():
             self.logger.debug('Updating value: %s = %s' % (key, value))
             if key in acq_keys:
                 _value = LimaTestConfiguration.ACQ_KEYS[key](value)
@@ -200,7 +200,7 @@ class LimaTestParser(object):
             test = self.default_test.get_copy(name, t_type, t_repeat, acq,
                                               saving)
         else:
-            msg = 'Non valid test found, please review config file [%s, %s]' % \
+            msg = 'Non valid test found, review config file [%s, %s]' % \
                 (str(self.default_test), str(t_type))
             raise Exception(msg)
 
@@ -208,5 +208,3 @@ class LimaTestParser(object):
 
     def get_tests(self):
         return self.tests
-
-
