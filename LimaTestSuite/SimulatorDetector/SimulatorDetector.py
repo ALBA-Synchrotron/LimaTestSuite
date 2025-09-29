@@ -15,7 +15,8 @@ class SimulatorDetector(SpecificDetector):
         #                      'concatNbFrames': 0,
         #                      'triggerMode': 'Internal',
         #                      'latencyTime': 0,
-        #                      # 'AUTO_EXPO_MODE': 0 # NOT ACCESSIBLE in Simulator (at least)!
+        #                      # 'AUTO_EXPO_MODE': 0
+        #                      # NOT ACCESSIBLE in Simulator (at least)!
         #                      }
         #
         # self._SavingDefaults = {'directory': './',
@@ -36,5 +37,5 @@ class SimulatorDetector(SpecificDetector):
                 self.cam = Simulator.Camera(port)
             time.sleep(2)
             self.hwint = Simulator.Interface(self.cam)
-        except Exception, e:
+        except Exception as e:
             logging.error('Error initializing detector object: \n%s', e)
